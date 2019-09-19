@@ -16,12 +16,13 @@ if (! exists("g:modelineconfirm_path"))
 	let g:modelineconfirm_path = "~/.vim/modelines"
 endif
 
-if ! isdirectory(expand(g:modelineconfirm_path))
-	call mkdir(expand(g:modelineconfirm_path))
-	call mkdir(expand(g:modelineconfirm_path) . '/approved')
-	" call mkdir(expand(g:modelineconfirm_path) . '/approved_for_any_file')
-	call mkdir(expand(g:modelineconfirm_path) . '/denied')
-endif
+" make the cache dirs
+for f in ['', '/approved', '/any_file', '/denied' ]
+	let p = expand(g:modelineconfirm_path) . f
+	if ! isdirectory(p)
+		call mkdir(p)
+	endif
+endfor
 
 " some other ideas:
 " - keep a modeline 'db'. If this exact ml was approved before, even in anothr
@@ -34,7 +35,10 @@ fun! Main() abort
 
 	let l:modelines = <SID>GetModelines()
 
-	if <SID>FileApproved(l:modelines)
+	if <SID>ModelinesApproved(l:modelines)
+		setlocal modeline
+		return
+	elseif <SID>FileApproved(l:modelines)
 		setlocal modeline
 		return
 	elseif <SID>FileDenied(l:modelines)
@@ -44,16 +48,33 @@ fun! Main() abort
 	endif
 endfun
 
+" if these modelines were approved for the cur file
 fun! <SID>FileApproved(modelines)
 	let cf = <SID>GetCacheFile('approved')
 	return filereadable(cf) && <SID>CompareCache(a:modelines, cf)
 endfun
 
+" if these modelines were denied for the cur file
 fun! <SID>FileDenied(modelines)
 	let cf = <SID>GetCacheFile('denied')
 	return filereadable(cf) && <SID>CompareCache(a:modelines, cf)
 endfun
 
+" if these modelines were approved for ANY file
+fun! <SID>ModelinesApproved(modelines)
+	for l:ml in values(a:modelines)
+		if ! <SID>CheckModeline(l:ml)
+			return 0
+		endif
+	endfor
+	return 1
+endfun
+
+" check if this modeline is approved for any file
+fun! <SID>CheckModeline(modeline)
+	let l:ml = <SID>ConvertModeline(a:modeline)
+	return filereadable(expand(g:modelineconfirm_path) .  '/any_file/' . l:ml)
+endfun
 
 " present the modelines to the user for review.
 fun! <SID>ReviewModelines(modelines)
@@ -69,6 +90,7 @@ fun! <SID>ReviewModelines(modelines)
 		elseif l:choice == 3
 			call <SID>CacheModelines(a:modelines, "approved")
 			call <SID>DeCacheModelines(a:modelines, "denied")
+			call <SID>ApproveForAll(a:modelines)
 			setlocal modeline
 		elseif l:choice == 4
 			call <SID>CacheModelines(a:modelines, "denied")
@@ -104,6 +126,15 @@ fun! <SID>IsModeline(linenu)
 	return -1  !=  match(getline(a:linenu), '\v(vi|ex|[v|V]im((<|\=|>)?[0-9]+)?):')
 endfun
 
+
+" approves the given modelines for all files
+fun! <SID>ApproveForAll(modelines)
+	for ml in values(a:modelines)
+		let ml = <SID>ConvertModeline(ml)
+		let f = expand(g:modelineconfirm_path) .  '/any_file/' . ml
+		call writefile([''], f)
+	endfor
+endfun
 
 " caches the given modelines as either approved or denied
 " status must be either 'approved' or 'denied'
@@ -152,6 +183,11 @@ endfun
 " converts the filepath to a string that can be saved as a filename
 fun! <SID>ConvertFilepath(fpath)
 	return fnamemodify(a:fpath, ':p:gs,/,%,')
+endfun
+
+" converts the modeline to a string that can be saved as a filename
+fun! <SID>ConvertModeline(ml)
+	return fnamemodify(a:ml, ':gs,/,%,')
 endfun
 
 
