@@ -34,18 +34,24 @@ fun! Main() abort
 
 	let l:modelines = <SID>GetModelines()
 
-	let cf = <SID>GetCacheFile('approved')
-	if filereadable(cf) && <SID>CompareCache(l:modelines, cf)
+	if <SID>FileApproved(l:modelines)
 		setlocal modeline
 		return
-	endif
-
-	let cf = <SID>GetCacheFile('denied')
-	if filereadable(cf) && <SID>CompareCache(l:modelines, cf)
+	elseif <SID>FileDenied(l:modelines)
 		return
+	else
+		call <SID>ReviewModelines(l:modelines)
 	endif
+endfun
 
-	call <SID>ReviewModelines(l:modelines)
+fun! <SID>FileApproved(modelines)
+	let cf = <SID>GetCacheFile('approved')
+	return filereadable(cf) && <SID>CompareCache(a:modelines, cf)
+endfun
+
+fun! <SID>FileDenied(modelines)
+	let cf = <SID>GetCacheFile('denied')
+	return filereadable(cf) && <SID>CompareCache(a:modelines, cf)
 endfun
 
 
@@ -136,7 +142,7 @@ fun s:compareLists(l1, l2)
 	return v:true
 endfun
 
-" returns the path of the cache file
+" returns path of the cache file for %
 " takes status: (approved|denied)
 fun! <SID>GetCacheFile(status)
 	let l:file = <SID>ConvertFilepath(expand('%'))
