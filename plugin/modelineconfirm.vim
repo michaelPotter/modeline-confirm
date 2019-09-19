@@ -10,10 +10,6 @@ if &compatible || &modeline == 0 || !has('dialog_con') || v:version < 700 || exi
 	finish
 endif
 
-" to fail closed, we'll turn off modeline now, and turn back on
-" if user wants it
-setlocal nomodeline
-
 let g:loaded_modelineconfirm = 1
 
 if (! exists("g:modelineconfirm_path"))
@@ -28,10 +24,14 @@ if ! isdirectory(expand(g:modelineconfirm_path))
 endif
 
 " some other ideas:
-" - keep a modeline 'db'. If this exact ml was approved b4, even in anthr
+" - keep a modeline 'db'. If this exact ml was approved before, even in anothr
 "	   file, just run it. Good for large codebases w/ exact modelines all
 "	   over
 fun! Main() abort
+	" to fail closed, we'll turn off modeline now, and turn back on
+	" if user wants it
+	setlocal nomodeline
+
 	let l:modelines = <SID>GetModelines()
 
 	let cf = <SID>GetCacheFile('approved')
