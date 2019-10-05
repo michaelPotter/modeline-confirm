@@ -13,7 +13,7 @@ endif
 let g:loaded_modelineconfirm = 1
 
 if (! exists("g:modelineconfirm_path"))
-	let g:modelineconfirm_path = "~/.vim/modelines"
+	let g:modelineconfirm_path = "~/.vim/.modelines"
 endif
 
 " make the cache dirs
