@@ -6,7 +6,25 @@
 " License:          Redistribute under the same terms as Vim itself
 " Purpose:          Review and confirm modelines before running them
 
-if &compatible || &modeline == 0 || !has('dialog_con') || v:version < 700 || exists('g:loaded_modelineconfirm')
+" we've already loaded the script
+if exists('g:loaded_modelineconfirm')
+	finish
+endif
+
+" modeline isn't even an available feature
+if &compatible
+	finish
+endif
+
+" the user doesn't want to run modelines
+if &modeline == 0
+	finish
+endif
+
+" We can't run our script. Turn the modeline off for safety and tell the user.
+if !has('dialog_con') || v:version < 700
+	set nomodeline
+	echo "Missing features: modeline-confirm can't run. Modeline has been disabled for your safety
 	finish
 endif
 
