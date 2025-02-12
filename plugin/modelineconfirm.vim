@@ -141,7 +141,7 @@ endfun
 " see help modeline
 " going with a very wide regex to reduce missed modelines
 fun! <SID>IsModeline(linenu)
-	return -1  !=  match(getline(a:linenu), '\v(vi|ex|[v|V]im((<|\=|>)?[0-9]+)?):')
+	return -1  !=  match(getline(a:linenu), '\v(^| )(vi|ex|[v|V]im((<|\=|>)?[0-9]+)?):')
 endfun
 
 
