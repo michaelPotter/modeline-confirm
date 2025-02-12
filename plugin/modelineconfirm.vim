@@ -31,7 +31,11 @@ endif
 let g:loaded_modelineconfirm = 1
 
 if (! exists("g:modelineconfirm_path"))
-	let g:modelineconfirm_path = "~/.vim/.modelines"
+	if (exists("*stdpath"))
+		let g:modelineconfirm_path = stdpath("state") .. "/modelines"
+	else
+		let g:modelineconfirm_path = "~/.vim/.modelines"
+	endif
 endif
 
 " make the cache dirs
